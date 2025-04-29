@@ -16,14 +16,14 @@
         background: #1F252B;
     }
     #canvas {      /* fixed viewport */
-        width: 900px;
-        height: 900px;
+        width: 1200px;
+        height: 1200px;
     }
 </style>
 </head>
 <body>
 
-<canvas id="canvas" width="900" height="900"></canvas>
+<canvas id="canvas" width="1200" height="1200"></canvas>
 
 <script src="https://unpkg.com/@rive-app/webgl2"></script>
 <script>
@@ -53,10 +53,6 @@
           .stateMachineInputs('State Machine 1')
           .find(i => i.name === 'num');
     
-        if (!tempProp || !numInput) {
-          console.error('❌ Could not find required inputs "temp" and/or "num"');
-          return;
-        }
     
         /* first fetch + start animation */
         fetchAndUpdate().then(() => r.play());
