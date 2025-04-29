@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>London Weather x Rive</title>
+<style>
+    /* blank page, canvas centred */
+    html, body {
+        height: 100%;
+        margin: 0;
+    }
+    body {
+        display: flex;
+        align-items: center;     /* vertical centre — CSS uses US spelling */
+        justify-content: center; /* horizontal centre */
+        background: #1F252B;
+    }
+    #canvas {      /* fixed viewport */
+        width: 900px;
+        height: 900px;
+    }
+</style>
+</head>
+<body>
+
+<canvas id="canvas" width="900" height="900"></canvas>
+
+<script src="https://unpkg.com/@rive-app/webgl2"></script>
+<script>
+    /* ---------- CONFIG ---------- */
+    const lat = 51.5072, lon = -0.1276;           // London
+    const api = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+    const REFRESH_MS = 60_000;                    // one minute
+    
+    let numInput, tempProp;                       // will hold refs once Rive is ready
+    
+    /* ---------- 1. LOAD RIVE ---------- */
+    const r = new rive.Rive({
+      src: 'weather_v3.riv',
+      canvas: document.getElementById('canvas'),
+      artboard: 'Main_Comp',
+      stateMachines: 'State Machine 1',
+      autoplay: false,
+      fit: rive.Fit.contain,
+      autoBind: true,
+      onLoad: () => {
+        r.resizeDrawingSurfaceToCanvas();
+    
+        const vmi = r.viewModelInstance;
+        tempProp = vmi.number('temp');
+    
+        numInput = r
+          .stateMachineInputs('State Machine 1')
+          .find(i => i.name === 'num');
+    
+        if (!tempProp || !numInput) {
+          console.error('❌ Could not find required inputs "temp" and/or "num"');
+          return;
+        }
+    
+        /* first fetch + start animation */
+        fetchAndUpdate().then(() => r.play());
+    
+        /* schedule repeat fetches every minute */
+        setInterval(fetchAndUpdate, REFRESH_MS);
+      }
+    });
+    
+    /* ---------- 2. FETCH + UPDATE ---------- */
+    async function fetchAndUpdate() {
+      try {
+        const { current_weather: cw } = await (await fetch(api)).json();
+    
+        /* inject live values */
+        const wmoCode = Number(cw?.weathercode ?? -1);
+        const celsius = Number(cw?.temperature  ?? -99);
+    
+        numInput.value  = wmoCode;
+        tempProp.value  = celsius;
+    
+        console.log(
+          `[update] ${cw.time}  code=${wmoCode}  temp=${celsius}°C`
+        );
+      } catch (e) {
+        console.error('[update] fetch failed:', e);
+      }
+    }
+    </script>
+    
+    
+    
+
+
+</body>
+</html>
